@@ -51,7 +51,9 @@ eval context x = case x of
    se o valor for diferente de 0, retorna-se o resultado da avaliação da expressão expT; 
    caso contrário, retorna-se o resultado da avaliação da expressão expE. 
    @dica: estude a semântica do "SIf" na LI2 e saiba explicar a diferença -}    
-    EIf exp expT expE -> undefined
+    EIf exp expT expE -> if(i (eval context exp) /= 0)
+      then eval contex expT
+      else eval contex expE
 {- TODO: abaixo, troque "undefined" por chamadas das funcoes definidas no inicio do arquivo
     aplicadas ao argumento "funDef"  @dica: não altere o resto, mas saiba explicar o funcionamento -}
     ECall id lexp   -> eval (paramBindings ++ contextFunctions) undefined 
