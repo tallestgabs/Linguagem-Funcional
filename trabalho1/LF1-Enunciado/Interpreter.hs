@@ -5,16 +5,16 @@ import Tests
 import Prelude hiding (lookup)
             
 {- TODO: Estude a definição do tipo Function no arquivo AbsLF.hs e complete as definicoes 
-    de "getParams" e "getExp" abaixo. Note "getName" já é fornecida.         
+    de "getParams" e "getExp" abaixo. Note "getName" já é fornecida. [OK]        
 -}
 getName :: Function -> Ident
 getName (Fun name _ _) = name
 
 getParams :: Function -> [Ident]
-getParams = undefined
+getParams (Fun _ params _) = params
 
 getExp :: Function -> Exp 
-getExp = undefined
+getExp (Fun _ _ exp) = exp
 
 
 {- TODO: *Não* altere a definição de "executeP" abaixo. 
