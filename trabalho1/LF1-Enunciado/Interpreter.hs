@@ -52,13 +52,13 @@ eval context x = case x of
    caso contrário, retorna-se o resultado da avaliação da expressão expE. 
    @dica: estude a semântica do "SIf" na LI2 e saiba explicar a diferença -}    
     EIf exp expT expE -> if(i (eval context exp) /= 0)
-      then eval contex expT
-      else eval contex expE
+      then eval context expT
+      else eval context expE
 {- TODO: abaixo, troque "undefined" por chamadas das funcoes definidas no inicio do arquivo
     aplicadas ao argumento "funDef"  @dica: não altere o resto, mas saiba explicar o funcionamento -}
-    ECall id lexp   -> eval (paramBindings ++ contextFunctions) undefined 
+    ECall id lexp   -> eval (paramBindings ++ contextFunctions) (getExp funDef)
                           where (ValorFun funDef) = lookup context id
-                                parameters =  undefined
+                                parameters =  getParams funDef
                                 paramBindings = zip parameters (map (eval context) lexp)
                                 contextFunctions = filter (\(i,v) -> case v of 
                                                                          ValorFun _ -> True 
@@ -66,7 +66,7 @@ eval context x = case x of
                                                            ) 
                                                           context
                                                           
-
+    
 
 -- *** @dica: nao altere o todo o codigo abaixo a partir daqui
 
