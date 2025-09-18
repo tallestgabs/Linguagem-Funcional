@@ -37,7 +37,7 @@ typeCheckP (Prog fs) = let nCtx = updatecF [] fs in
 {- TODO: na definição de "typeCheckF" abaixo,substitua "undefined" 
          pelo argumento relevante -}                                                
 typeCheckF ::  TContext -> Function -> R TContext    
-typeCheckF tc (Fun tR _ decls exp) = tke (parameterTypeBindings ++ functionTypes) undefined tR
+typeCheckF tc (Fun tR _ decls exp) = tke (parameterTypeBindings ++ functionTypes) exp tR
                                         where parameterTypeBindings = map (\(Dec tp id) -> (id,tp)) decls
                                               functionTypes = filter (\(i,t) -> case t of 
                                                                                  TFun _  _ -> True 
@@ -82,7 +82,18 @@ tinf tc x  =  case x of
    "exp" deve ser inteiro (Tint), e os tipos de "expT" e "expE" devem ser iguais.
    @dica: estude a estrutura da checagem de tipo do "SIf" na LI2Tipada. 
 -}  
-    eIf@(EIf exp expT expE) -> undefined
+    eIf@(EIf exp expT expE) -> let rCond = tke tc exp Tint in -- verifica se a condicao eh Inteiro
+                                  case rCond of 
+                                      Erro msg -> Erro msg  -- se falhar propaga o erro
+                                      OK _ -> let rThen = tinf tc expT in  -- se OK verifica os ramos e infere o tipo do ramo 'then'
+                                                case rThen of
+                                                    Erro msg -> Erro msg   -- se falhar propaga o erro
+                                                    OK typeThen -> let rElse = tinf tc expE in  -- se OK entao inferimos/descobrimos o 'else'
+                                                                      case rElse of 
+                                                                        Erro msg -> Erro msg 
+                                                                        OK typeElse -> if typeThen == typeElse  -- Ambos os ramos OK entao comparamos o tipo dos dois
+                                                                          then OK typeThen  -- Sucesso, as duas sao do mesmo tipo
+                                                                          else Erro ("@typechecker: Tipos incompativeis. 'then' retorna " ++ printTree typeThen ++ " enquanto o 'else' retorna " ++ printTree typeElse)
 -- TODO: sobre "ECall" abaixo, a lógica permanece a mesma em relação a LI2Tipada ? Por que? 
     ECall id lexp   -> let r = lookup tc id in 
                         case r of 
