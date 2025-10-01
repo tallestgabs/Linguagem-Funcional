@@ -1,4 +1,11 @@
 
 int main() {
-    if ((10 - 11) > 0) then 1 else 0
+    equal(11 - 11)
+}
+
+
+int equal(int a, int b){
+    if(a - b) 
+        then 0   
+        else 1
 }
