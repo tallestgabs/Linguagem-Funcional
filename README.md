@@ -18,5 +18,28 @@ você deve fornecer o arquivo Interpreter.hs com a semântica da execução.  A
 recomendação é reaproveitar o Interpreter.hs da LF1 redefinindo as funções indicadas no 
 início do arquivo que extraem informação de um valor do tipo Function (getName, getParams, getExp).
 # Trabalho 2
+* (LF3) ->
+*Data de apresentação/arguição em sala de aula: 10/10*
+
+* O trabalho pode ser individual ou em dupla (preferencialmente)
+
+* Evoluir a LF2 para promover funções como valores. Isso significa prover as seguintes 
+funcionalidades:
+
+1. expressão lambda
+2. aplicação parcial
+3. composição de funções 
+* No arquivo comprimido, é fornecida a sintaxe concreta (LF3.cf), a partir da qual a sintaxe abstrata, o lexer e o parser podem ser gerados pelo BNFC. Também são fornecidos arquivos iniciais para o type checker (Typechecer.hs), otimizador (Optimizer.hs),  e semântica de execução (Interpreter.hs). Por fim, são fornecidos o driver do interpretador  (Interpret.hs), um arquivo auxiliar de sintexe abstrata (AbsLFAux.hs), e o  diretório "examples" com programas de teste escritos na LF3.
+
+### Tarefas
+
+* Estude o arquivo LF3.cf, localizando as mudanças (procure por "NOVO"). O arquivo poderá ser consultado por ocasião da criação de novos programas exemplos.
+Gere a sintaxe abstrata, o lexer, e o parser a partir do BNFC.    
+* Estude a sintaxe abstrata (AbsLF.hs), observando o que mudou em relação à LF2.
+Realize as tarefas TODO nos arquivos Typechecer.hs, Optimizer.hs, e Interpreter.hs
+Favor nao apagar os comentários TODO, pois serao usados para guiar a arguicao.
+Execute os testes no diretório "examples" para testar o interpretador.
+Crie novos programas de teste para testar as funcionalidades novas da LF3. 
+*Bom trabalho!*
 # Trabalho 3
 
