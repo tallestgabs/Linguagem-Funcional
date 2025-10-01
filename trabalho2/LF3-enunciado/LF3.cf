@@ -12,8 +12,8 @@ separator  Exp "," ;
 separator nonempty  Ident "," ;
 separator  Type "->" ;
 
-EComp.   Exp ::=  "< " Exp "." Exp ">" ;      --<<--**** NOVO
-ELambda. Exp ::=  "lambda" [Decl] "->" Exp  ;  --<<--**** NOVO
+EComp.   Exp ::=  "< " Exp "." Exp ">" ;      --<<--**** NOVO | composicao de funcoes. Exemplo: (sum(x,y) . double(x,y)) f(g(x))
+ELambda. Exp ::=  "lambda" [Decl] "->" Exp  ;  --<<--**** NOVO | 
 EIf.  Exp ::= "if" "(" Exp ")" "then" Exp "else" Exp;
 EOr.  Exp1 ::= Exp1 "||" Exp2 ;
 EAnd. Exp2 ::= Exp2 "&&" Exp3 ;
@@ -24,7 +24,8 @@ ESub. Exp4  ::= Exp4  "-" Exp5 ;
 EMul. Exp5  ::= Exp5 "*" Exp6 ;
 EDiv. Exp5  ::= Exp5 "/" Exp6 ;  
 -- ECall. Exp6  ::= Ident "(" [Exp] ")" ;  
-ECall. Exp6 ::= Exp7 "(" [Exp] ")" ;  --<<--**** NOVO: MUDOU EM RELAÇÃO À LINHA ACIMA
+ECall. Exp6 ::= Exp7 "(" [Exp] ")" ;  --<<--**** NOVO: MUDOU EM RELAÇÃO À LINHA ACIMA | (Um identificador tambem eh uma expression, portanto ao mudar Ident por EXP estamos mantendo o comportamento anterior 
+-- de chamadas porem agora com a opcao de passar uma funcao como argumento, que eh importante para chamar funcoes lambda por exemplo)
 EInt. Exp7  ::= Integer ;
 EVar. Exp7  ::= Ident ;
 EStr. Exp7  ::= String ;
