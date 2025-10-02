@@ -20,8 +20,10 @@ data Decl = Dec Type Ident
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data Exp
+    -- possui composicao de funcoes e lambda, diferentemente da LF2
     = EComp Exp Exp
     | ELambda [Decl] Exp
+    -- resto igual a LF2 menos em ECall
     | EIf Exp Exp Exp
     | EOr Exp Exp
     | EAnd Exp Exp
@@ -31,7 +33,7 @@ data Exp
     | ESub Exp Exp
     | EMul Exp Exp
     | EDiv Exp Exp
-    | ECall Exp [Exp]
+    | ECall Exp [Exp]  -- EXP ao inves de Ident
     | EInt Integer
     | EVar Ident
     | EStr String

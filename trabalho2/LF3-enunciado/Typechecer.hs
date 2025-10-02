@@ -73,7 +73,8 @@ tinf tc x  =  case x of
              2) explicar o argumento de tinf abaixo
     -}
     ELambda params exp -> case (tinf (parameterTypeBindings ++ tc) exp) of  
-                            OK tExp -> undefined
+                            OK tExp -> OK (TFun tExp paramsType)
+                              where paramsType = map (\(Dec tp _) -> tp) params
                             Erro msg -> Erro msg
                            where parameterTypeBindings = map (\(Dec tp id) -> (id,tp)) params
 
