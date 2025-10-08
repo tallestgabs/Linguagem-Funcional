@@ -72,25 +72,25 @@ tinf tc x  =  case x of
     {- TODO: 1)completar abaixo trocando undefined pelo retorno apropriado 
              2) explicar o argumento de tinf abaixo
     -}
-    ELambda params exp -> case (tinf (parameterTypeBindings ++ tc) exp) of  
-                            OK tExp -> OK (TFun tExp paramsType)
-                              where paramsType = map (\(Dec tp _) -> tp) params
-                            Erro msg -> Erro msg
-                           where parameterTypeBindings = map (\(Dec tp id) -> (id,tp)) params
+    ELambda params exp -> case (tinf (parameterTypeBindings ++ tc) exp) of  -- tenta descobrir o tipo de exp passando como contexto tc (de fora)
+                            OK tExp -> OK (TFun tExp paramsType)     -- se tExp for um OK entao temos uma nova funcao com o tExp como tipo de retorno e paramsType como parametros
+                              where paramsType = map (\(Dec tp _) -> tp) params  -- definimos paramsType que vai retornar uma lista contendo os tipos dos parametros
+                            Erro msg -> Erro msg  -- se nao tiver um OK entao da erro
+                           where parameterTypeBindings = map (\(Dec tp id) -> (id,tp)) params  -- define parameterType... que retorna uma lista com (identificador, tipo do parametro)
 
     {- TODO: 1)completar abaixo trocando undefined pelo retorno apropriado 
              2) fazer as explicacoes necessarias
     -}    
     ECall exp lexp  -> case (tinf tc exp) of  
-                        OK (TFun tR pTypes) -> if (length pTypes >= length lexp) -- TODO explicar >=
+                        OK (TFun tR pTypes) -> if (length pTypes >= length lexp) -- TODO explicar >=      se fosse == estariamos analisando apenas aplicacao completa, porem com >= alem de completas tambem faremos as aplicacoes parciais
                                                  then 
-                                                   if (isThereError tksArgs /= [])
+                                                   if (isThereError tksArgs /= [])  -- se tksArgs tiver pego algum erro a lista vai ser != [], pois os elementos da lista sao erros
                                                     then Erro " @typechecker: tipo incompativel entre argumento e parametro"
-                                                    else if (length pTypes > length lexp)  -- TODO o que isso testa ?
-                                                          then undefined
-                                                          else OK tR
-                                                 else Erro " @typechecker: mais argumentos que parametros"
-                                               where tksArgs = zipWith (tke tc) lexp pTypes
+                                                    else if (length pTypes > length lexp)  -- TODO o que isso testa ?    aplicacao parcial (tamanho de parametro maior que argumentos passados)
+                                                          then OK (TFun tR drop(length lexp) pTypes)  -- se for parcial entao vai ser uma nova funcao com o mesmo tR e faz um drop (remove) dos parametros os argumentos que ja foram passados
+                                                          else OK tR -- se nao for parcial entao vai ser completa, ou seja, retornamos apenas o tipo de retorno
+                                                 else Erro " @typechecker: mais argumentos que parametros"  -- argumentos nao podem ser maiores que os parametros
+                                               where tksArgs = zipWith (tke tc) lexp pTypes  -- define tksArgs onde faz uma tupla contendo elementos dos argumentos com elementos dos parametros, e manda pro tke para ver se possuem o mesmo tipo
                                                      isThereError l = filter (==False) 
                                                                              (map (\e->(let r2 = e in  
                                                                                             case r2 of
@@ -99,10 +99,10 @@ tinf tc x  =  case x of
                         OK t -> Erro ("@typechecker: tipo deveria ser funcao em " ++ printTree exp++ " tipo real: " ++ show t)
                         Erro msg -> Erro msg
     -- TODO: o que esta sendo testando abaixo ?                     
-    EComp exp1 exp2 -> case (tinf tc exp1, tinf tc exp2) of
-                        (OK (TFun trExp1 tpsExp1) , OK (TFun trExp2 tpsExp2) )  ->
-                           if ([trExp2] == tpsExp1)
-                             then OK (TFun trExp1 tpsExp2)
+    EComp exp1 exp2 -> case (tinf tc exp1, tinf tc exp2) of  -- tenta descobrir o tipo das exps
+                        (OK (TFun trExp1 tpsExp1) , OK (TFun trExp2 tpsExp2) )  ->   -- se for OK vao ser tipo funcao
+                           if ([trExp2] == tpsExp1)  -- conferimos se o tipo de retorno da 2 expressao eh igual ao tipo de parametro da 1 expressao
+                             then OK (TFun trExp1 tpsExp2)  -- se OK entao vai ser uma nova funcao
                              else Erro "erro..."
 
 
