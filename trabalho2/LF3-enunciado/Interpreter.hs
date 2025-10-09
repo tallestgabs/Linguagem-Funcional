@@ -35,7 +35,8 @@ eval context x = case x of
     EIf exp expT expE -> if ( i (eval context exp) /= 0) 
                           then eval context expT
                           else eval context expE
-    -- TODO: na linha abaixo, retorne um ValorFun contendo o lambda e saiba explicar a razao                            
+    -- TODO: na linha abaixo, retorne um ValorFun contendo o lambda e saiba explicar a razao         
+    -- O objetivo aqui nao é executar lambda, mas sim envelopar ela em um Valor para ser executada mais tarde com ECall                   
     lambda@(ELambda params exp) -> ValorFun lambda
     -- TODO: em EComp abaixo, troque undefined (2 ocorrencias) pela construcao apropriada                           
     EComp exp1 exp2 ->  let (ValorFun exp1') = eval context exp1
@@ -62,9 +63,15 @@ eval context x = case x of
 -- a função "subst" gera uma nova expressao a partir dos bindings em RContext
 subst :: RContext -> Exp -> Exp 
 subst rc exp  = case exp of  
-    EVar id        -> bind id rc -- TODO: por que eh implementado assim ?
+    EVar id        -> bind id rc -- TODO: por que eh implementado assim ?  
+    -- esse eh o caso base da substituicao de variavel, quando encontra uma EVar ela para de descer na arvore, e na hora de substituir ele delega a tarefa para a
+    -- funcao bind que vai pegar o identificador e o contexto de substituicao para realizar a substituicao e retornar a expressao
+
     -- TODO: explique a implementacao da linha abaixo
     lambda@(ELambda paramsTypes exp) -> ELambda paramsTypes (subst (rc `diff` (getParamsL lambda)) exp)
+    -- sombreamento de variavel, ela garante que os parametros de uma funcao nao sejam substituidos por uma variavel de fora com o mesmo nome 
+    -- diff remove da lista de substituicao rc as variaveis que foram "sombreadas" pelos parametros da lambda
+
     ECall exp lexp -> ECall (subst rc exp ) (map (subst rc) lexp)
     EAdd exp0 exp  -> EAdd (subst rc exp0 ) (subst rc exp )
     -- TODO: nos casos abaixo, troque cada undefined pela construcao apropriada
@@ -77,17 +84,24 @@ subst rc exp  = case exp of
     EOr  exp0 exp  -> EOr (subst rc exp0) (subst rc exp)
     EAnd exp0 exp  -> EAnd (subst rc exp0) (subst rc exp)
     ENot exp       -> ENot (subst rc exp) 
-    _ -> exp   -- TODO: quais sao esses casos e por que sao implementados assim ?                        
+    _ -> exp   -- TODO: quais sao esses casos e por que sao implementados assim ?       serao os literais, caso baso que nao faz nada e retorna a expressao inalterada         
 
 {- TODO: 
   sobre a implementacao finalizada de subst:
-  1) qual eh o caso base?
-  2) como descrever o numero de casos recursivos? depende (in)diretamente de algo?
-  3) qual a finalidade dos casos recursivos?
-  4) por que a linha 64 eh diferente dos outros casos recursivos?  
+  1) qual eh o caso base?  EVar que realiza a substituicao e _ que lida com literais e nao faz nada
+
+  2) como descrever o numero de casos recursivos? depende (in)diretamente de algo? Depende diretamente da quantidade de nós na arvore que nao sejam folhas
+
+  3) qual a finalidade dos casos recursivos? A finalidade eh percorrer a AST e desmontando os nós para realizar a substituicao e montar novamente com as variaveis substituidas
+
+  4) por que a linha 64 eh diferente dos outros casos recursivos? Porque ELambda eh o unico que introduz um novo escopo de variaveis, ela precisa do diff para tratar o sombreamento
+  -- de variaveis, que é algo que as outras nao fazem
+
   5) numa especificacao textual intuitiva e concisa (semelhante ao comentario na linha 59),
      qual a linha mais importante entre 62-77 ?
-  6) Ha semelhanca de implementacao em relacao ao Optimizer.hs? Qual(is)?    
+     -- A linha mais importante é a lambda que  implementa a semantica de escopo da linguagem, que é a parte fundamental para o funcionamento das funções
+
+  6) Ha semelhanca de implementacao em relacao ao Optimizer.hs? Qual(is)?    sim, subst e optimizeE usam recursao com "case exp of" para percorrer todos os tipos de expressao
 -}
 
 -- a função "diff" faz a diferença, tirando de RContext os mapeamentos envolvendo [Ident].
@@ -99,7 +113,8 @@ rc `diff` [] = rc
     | otherwise = (k,v) : ( kvs `diff` (id:ids))
 
 -- a função bind retorna uma expressao contendo o valor do id no RContext, ou o proprio id. 
--- TODO: por que nao usamos o lookup no lugar de bind ?
+-- TODO: por que nao usamos o lookup no lugar de bind ?  lookup tem que retornar um Valor, ou seja, se nao achar a variavel ele quebra, enquanto o bind
+-- seria mais seguro porque se ele nao achar a variavel ele retorna a variavel original, o que seria o comportamento correto para uma substituicao
 bind :: Ident -> RContext -> Exp
 bind id [] = EVar id  -- retorna o proprio id se ele nao esta ligado em RContext
 bind id ((k,v):kvs)
@@ -120,7 +135,7 @@ data Valor = ValorInt {
              }
             | 
              ValorFun {
-               f :: Exp   --f :: Function  **NOVO TODO: Por que mudou ?
+               f :: Exp   --f :: Function  **NOVO TODO: Por que mudou ?   para guardar o valor Elambda diretamente
              }   
             | 
              ValorStr {
@@ -134,7 +149,7 @@ instance Show Valor where
   show (ValorBool b) = show b
   show (ValorInt i) = show i
   show (ValorStr s) = s
-  show (ValorFun f) = show f  -- TODO: por que essa linha funciona ?
+  show (ValorFun f) = show f  -- TODO: por que essa linha funciona ?  BNFC cria uma instancia de show que sabe como transformar empressao em string legivel
   
 
 lookup :: RContext -> Ident -> Valor
@@ -156,3 +171,6 @@ updatecF c (f:fs) = updatecF (update c (getName f)
                                        (ValorFun (ELambda (getParams f) (getExp f)))) 
                               fs
 -- updatecF c (f:fs) = updatecF (update c (getName f) (ValorFun f)) fs
+
+-- Antes o ValorFun esperava um tipo Function. Na nova versao o tipo Function tem seu corpo e parametros extraidos e envelopados por uma ELambda, criando um noh com elas que
+-- vai ser do tipo exp, que eh o tipo que o ValorFun espera agora
