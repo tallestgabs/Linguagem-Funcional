@@ -87,7 +87,7 @@ tinf tc x  =  case x of
                                                    if (isThereError tksArgs /= [])  -- se tksArgs tiver pego algum erro a lista vai ser != [], pois os elementos da lista sao erros
                                                     then Erro " @typechecker: tipo incompativel entre argumento e parametro"
                                                     else if (length pTypes > length lexp)  -- TODO o que isso testa ?    aplicacao parcial (tamanho de parametro maior que argumentos passados)
-                                                          then OK (TFun tR drop(length lexp) pTypes)  -- se for parcial entao vai ser uma nova funcao com o mesmo tR e faz um drop (remove) dos parametros os argumentos que ja foram passados
+                                                          then OK (TFun tR (drop(length lexp) pTypes))  -- se for parcial entao vai ser uma nova funcao com o mesmo tR e faz um drop (remove) dos parametros os argumentos que ja foram passados
                                                           else OK tR -- se nao for parcial entao vai ser completa, ou seja, retornamos apenas o tipo de retorno
                                                  else Erro " @typechecker: mais argumentos que parametros"  -- argumentos nao podem ser maiores que os parametros
                                                where tksArgs = zipWith (tke tc) lexp pTypes  -- define tksArgs onde faz uma tupla contendo elementos dos argumentos com elementos dos parametros, e manda pro tke para ver se possuem o mesmo tipo

@@ -2,6 +2,9 @@ module Interpreter where
 
 import AbsLF
 import AbsLFAux  -- TODO: leia agora o conteudo desse arquivo (AbsLFAux.hs) e explique por que refatoramos assim 
+-- manutenabilidade, organizacao, etc -> alem das boas praticas em separar arquivos com propostas diferentes (AbsLF define a nossa AST e os getters buscam informacoes)
+-- os getters ficam em outro arquivo porque a AbsLF eh gerada automaticamente quando usamos BNFC, se colocarmos um codigo manual em um arquivo gerado automaticamente
+-- toda vez que usarmos BNFC o nosso codigo inserido manualmente sera apagado
 import Prelude hiding (lookup)
 
 
@@ -33,18 +36,18 @@ eval context x = case x of
                           then eval context expT
                           else eval context expE
     -- TODO: na linha abaixo, retorne um ValorFun contendo o lambda e saiba explicar a razao                            
-    lambda@(ELambda params exp) -> undefined
+    lambda@(ELambda params exp) -> ValorFun lambda
     -- TODO: em EComp abaixo, troque undefined (2 ocorrencias) pela construcao apropriada                           
     EComp exp1 exp2 ->  let (ValorFun exp1') = eval context exp1
-                            (ValorFun exp2') = undefined in 
+                            (ValorFun exp2') = eval context exp2 in 
                           ValorFun(ELambda (getParamsTypesL exp2') 
-                                           (ECall undefined [ECall exp2' (getParamsExpL exp2')]))             
+                                           (ECall exp1' [ECall exp2' (getParamsExpL exp2')]))             
     {- TODO: em ECall abaixo, troque undefined (3 ocorrencias) pela construcao apropriada.                           
        Dica: estude o codigo, buscando entender tambem as definicoes locais -}
     ECall exp lexp ->  if (length lexp < length parameters) 
-                         then ValorFun (ELambda undefined undefined) -- TODO: que caso eh esse ?
-                         else eval (paramBindings ++ contextFunctions) exp' -- TODO: que caso eh esse ? 
-                        where (ValorFun lambda) = eval context undefined
+                         then ValorFun (ELambda params' exp') -- TODO: que caso eh esse ?   Aplicacao parcial
+                         else eval (paramBindings ++ contextFunctions) exp' -- TODO: que caso eh esse ?   Aplicacao completa
+                        where (ValorFun lambda) = eval context exp
                               parameters = getParamsL lambda
                               paramBindings = zip parameters (map (eval context) lexp)
                               params' = drop (length lexp) (getParamsTypesL lambda)
@@ -65,15 +68,15 @@ subst rc exp  = case exp of
     ECall exp lexp -> ECall (subst rc exp ) (map (subst rc) lexp)
     EAdd exp0 exp  -> EAdd (subst rc exp0 ) (subst rc exp )
     -- TODO: nos casos abaixo, troque cada undefined pela construcao apropriada
-    EComp exp1 exp2 -> undefined
-    EIf expC expT expE -> undefined
-    ECon exp0 exp  -> undefined
-    ESub exp0 exp  -> undefined
-    EMul exp0 exp  -> undefined
-    EDiv exp0 exp  -> undefined
-    EOr  exp0 exp  -> undefined
-    EAnd exp0 exp  -> undefined
-    ENot exp       -> undefined
+    EComp exp1 exp2 -> EComp (subst rc exp1) (subst rc exp2)
+    EIf expC expT expE -> EIf (subst rc expC) (subst rc expT) (subst rc expE)
+    ECon exp0 exp  -> ECon (subst rc exp0) (subst rc exp)
+    ESub exp0 exp  -> ESub (subst rc exp0) (subst rc exp)
+    EMul exp0 exp  -> EMul (subst rc exp0) (subst rc exp)
+    EDiv exp0 exp  -> EDiv (subst rc exp0) (subst rc exp)
+    EOr  exp0 exp  -> EOr (subst rc exp0) (subst rc exp)
+    EAnd exp0 exp  -> EAnd (subst rc exp0) (subst rc exp)
+    ENot exp       -> ENot (subst rc exp) 
     _ -> exp   -- TODO: quais sao esses casos e por que sao implementados assim ?                        
 
 {- TODO: 
