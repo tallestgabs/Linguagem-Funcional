@@ -41,5 +41,28 @@ Favor nao apagar os comentários TODO, pois serao usados para guiar a arguicao.
 Execute os testes no diretório "examples" para testar o interpretador.
 Crie novos programas de teste para testar as funcionalidades novas da LF3. 
 *Bom trabalho!*
+
 # Trabalho 3
 
+Apresentação: 19/11 e 21/11
+
+* Parte 1- (5,0 pontos)- Otimização em tempo de execução com memoização
+
+### Descrição:
+
+Estenda semântica operacional da LF2 com memoização de chamadas de funções nomeadas.
+No arquivo Interpreter.hs, quando uma função nomeada (não é uma expressão lambda) for chamada
+com determinados argumentos, checa-se se a chamada já foi feita. Caso sim, retorna-se o valor;
+caso contrário, evalia-se a chamada e retorna-se um novo contexto com esse novo resultado
+para eventual uso futuro, a fim de evitar recomputação.
+
+Teste num programa de Fibonacci com e sem memoização. Teste em C e em Python
+ou qualquer outra linguagem de preferência e veja as limitações.
+
+===============================================================
+
+* Parte 2- (5,0 pontos)- Refatoração Monads/SYB
+
+Descrição: Utilize Monads e SYB para refatorar o interpretador da LF2. Algumas possibilidades
+são no otimizador (Optimizer.hs), checador de tipos (Typechecer.hs), e semântica operacional
+(Interpreter.hs).
