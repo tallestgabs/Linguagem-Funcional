@@ -89,7 +89,7 @@ data Valor = ValorInt {
              } 
             | ValorBool {
                b :: Bool
-             }
+             } deriving (Eq, Show) -- para FunCallEA funcione com Eq (lookup)
 
 instance Show Valor where
   show (ValorBool b) = show b
@@ -99,6 +99,25 @@ instance Show Valor where
 --(\(Ident x) -> x) nf
 
 type RContext = [(Ident,Valor)]
+
+--"Function Call with Evaluated Arguments" -> Chave do cache
+data FunCallEA = FCEA Ident [Valor] deriving (Eq, Show)
+
+-- cache de memoizacao
+type FCContex = [(FunCallEA, Valor)]
+
+-- novo environment que carrega o cache
+type Environment = (RContext, FCContex)
+
+-- maybe para buscar no cache
+data R a = OK a | Erro String deriving (Eq, Ord, Show, Read)
+
+-- buscar no cache
+lookupShallowFC :: FCContex -> FunCallEA -> R Valor
+lookupShallowFC [] s = Erro "Not in cache"
+lookupShallowFC ((i,v):cs) s 
+   | i == s = OK v  -- por causa desse == que FunCallEA precisa ter deriving
+   | otherwise = lookupShallowFC cs s
 
 lookup :: RContext -> Ident -> Valor
 lookup ((i,v):cs) s
