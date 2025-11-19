@@ -23,26 +23,64 @@ executeP (Prog fs) =  eval (updatecF [] fs, []) (expMain fs)
           
    
 eval :: FCContext -> RContext -> Exp -> (Valor, FCContex)
-eval context x = case x of
-    ECon exp0 exp  -> ValorStr ( s (eval context exp0) ++  s (eval context exp) )
-    EAdd exp0 exp  -> ValorInt ( i (eval context exp0)  +  i (eval context exp))
-    ESub exp0 exp  -> ValorInt ( i (eval context exp0)  -  i (eval context exp)) 
-    EMul exp0 exp  -> ValorInt ( i (eval context exp0)  *  i (eval context exp))
-    EDiv exp0 exp  -> ValorInt ( i (eval context exp0) `div` i (eval context exp)) 
-    EOr  exp0 exp  -> ValorBool ( b (eval context exp0)  || b (eval context exp))
-    EAnd exp0 exp  -> ValorBool ( b (eval context exp0)  && b (eval context exp))
-    ENot exp       -> ValorBool ( not (b (eval context exp)))
-    EStr str       -> ValorStr str
-    ETrue          -> ValorBool True
-    EFalse         -> ValorBool False
-    EInt n         -> ValorInt n
-    EVar id        -> lookup context  id
+eval fcc rc x = case x of
+    ECon exp0 exp  -> let (v1, fcc1) = eval fcc rc exp0
+                          (v2, fcc2) = eval fcc1 rc exp
+                      in (ValorInt (s v1 ++ s v2), fcc2)
 
-    EIf exp expT expE -> if(i (eval context exp) /= 0)
-      then eval context expT
-      else eval context expE
+    EAdd exp0 exp  -> let (v1, fcc1) = eval fcc rc exp0
+                          (v2, fcc2) = eval fcc1 rc exp
+                      in (ValorInt (i v1 + i v2), fcc2)
 
-    ECall id lexp   -> eval (paramBindings ++ contextFunctions) (getExp funDef)
+    ESub exp0 exp  -> let (v1, fcc1) = eval fcc rc exp0
+                          (v2, fcc2) = eval fcc1 rc exp
+                      in (ValorInt (i v1 - i v2), fcc2)
+
+    EMul exp0 exp  -> let (v1, fcc1) = eval fcc rc exp0
+                          (v2, fcc2) = eval fcc1 rc exp
+                      in (ValorInt (i v1 * i v2), fcc2)
+
+    EDiv exp0 exp  -> let (v1, fcc1) = eval fcc rc exp0
+                          (v2, fcc2) = eval fcc1 rc exp
+                      in (ValorInt (i v1 `div` i v2), fcc2)
+
+    EOr  exp0 exp  -> let (v1, fcc1) = eval fcc rc exp0 
+                          (v2, fcc2) = eval fcc1 rc exp
+                      in (ValorBool (b v1 || b v2), fcc2)
+
+    EAnd exp0 exp  -> let (v1, fcc1) = eval fcc rc exp0 
+                          (v2, fcc2) = eval fcc1 rc exp 
+                      in (ValorBool (b v1 && b v2), fcc2)
+
+    ENot exp       -> let (v1, fcc1) = eval fcc rc exp 
+                      in (ValorBool (not(b v1)), fcc1)
+
+    EStr str       -> (ValorStr str, fcc)
+    ETrue          -> (ValorBool True, fcc)
+    EFalse         -> (ValorBool False, fcc)
+    EInt n         -> (ValorInt n, fcc)
+    EVar id        -> (lookup rc id, fcc)
+
+    EIf exp expT expE -> let(vCond, fcc1) = eval fcc rc exp
+                         in if(i vCond /= 0)
+                            then eval fcc1 rc expT
+                            else eval fcc1 rc expE
+
+    ECall id lexp   -> 
+        let 
+            -- funcao auxiliar para avaliar lista de argumento passado no cache
+            evalArgs :: FCContex -> RContext -> [Exp] -> ([Valor], FCContex)
+            evalArgs currentFcc _ [] = ([], currentFcc)
+            evalArgs currentFcc context (e:es) =
+                let (v, fccNext)
+      
+      
+      
+      
+      
+      
+      
+      eval (paramBindings ++ contextFunctions) (getExp funDef)
                           where (ValorFun funDef) = lookup context id
                                 parameters =  getParams funDef
                                 paramBindings = zip parameters (map (eval context) lexp)
