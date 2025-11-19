@@ -72,7 +72,34 @@ eval fcc rc x = case x of
             evalArgs :: FCContex -> RContext -> [Exp] -> ([Valor], FCContex)
             evalArgs currentFcc _ [] = ([], currentFcc)
             evalArgs currentFcc context (e:es) =
-                let (v, fccNext)
+                let (v, fccNext) = eval currentFcc context e 
+                    (vs, fccFinal) = evalArgs fccNext context es 
+                in (v:vs, fccFinal)
+
+            -- avalia argumentos usando cache atual
+            (evaluatedArgs, fccAfterArgs) = evalArgs fcc rc lexp 
+
+            -- cria a key
+            cacheKey = FCEA id evaluatedArgs
+        in
+          -- verifica o cache apos avaliar os argumentos
+            case lookupShallowFC fccAfterArgs cacheKey of 
+              -- retorna valor e o cache atual
+                OK v -> (v, fccAfterArgs)
+
+              -- cache miss
+                Erro _ ->
+                    let 
+                        (ValorFun funDef) = lookup rc id 
+                        params = getParams funDef 
+
+                        -- cria RContext apenas para a execucao da funcao
+                        paramBindings = zip params evaluatedArgs
+                        contextFunctions = filter (\(_,v) -> case v of ValorFun _ -> True; _ -> False) rc 
+
+                        -- novo novo RContext
+                        
+
       
       
       
