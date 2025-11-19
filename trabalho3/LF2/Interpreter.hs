@@ -15,13 +15,14 @@ getExp (Fun _ _ _ exp) = exp
 
 executeP :: Program -> Valor
 
-executeP (Prog fs) =  eval (updatecF [] fs) (expMain fs)
+-- agora executeP vai iniciar um cache []
+executeP (Prog fs) =  eval (updatecF [] fs, []) (expMain fs)
     where expMain (f:xs) 
               | (getName f == (Ident "main")) =  getExp f
               | otherwise = expMain xs                                            
           
    
-eval :: RContext -> Exp -> Valor
+eval :: FCContext -> RContext -> Exp -> (Valor, FCContex)
 eval context x = case x of
     ECon exp0 exp  -> ValorStr ( s (eval context exp0) ++  s (eval context exp) )
     EAdd exp0 exp  -> ValorInt ( i (eval context exp0)  +  i (eval context exp))
@@ -83,9 +84,6 @@ data FunCallEA = FCEA Ident [Valor] deriving (Eq, Show)
 
 -- cache de memoizacao
 type FCContex = [(FunCallEA, Valor)]
-
--- novo environment que carrega o cache
-type Environment = (RContext, FCContex)
 
 -- maybe para buscar no cache
 data R a = OK a | Erro String deriving (Eq, Ord, Show, Read)
