@@ -3,9 +3,6 @@ module Interpreter where
 import AbsLF
 import Prelude hiding (lookup)
             
-{- TODO: Estude a definição do tipo Function no arquivo AbsLF.hs e complete as definicoes 
-    de "getParams" e "getExp" abaixo. Note "getName" já é fornecida. [OK]        
--}
 getName :: Function -> Ident
 getName (Fun _ name _ _) = name
 
@@ -15,11 +12,6 @@ getParams (Fun _ _ decls _) = map (\(Dec _ id) -> id) decls
 getExp :: Function -> Exp 
 getExp (Fun _ _ _ exp) = exp
 
-
-{- TODO: *Não* altere a definição de "executeP" abaixo. 
-         *Entenda* a razão da mudança em relação à definição na LI2.
-         Garanta que saiba explicar verbalmente isso.
--}
 
 executeP :: Program -> Valor
 
@@ -44,17 +36,11 @@ eval context x = case x of
     EFalse         -> ValorBool False
     EInt n         -> ValorInt n
     EVar id        -> lookup context  id
-{- TODO: remova "undefined" e implemente a avaliação do "EIf" abaixo. A primeira expressao ("exp") é a condição,
-   "expT" é a expressão do "then" e "expE" é a expressão do "else". A semântica (comportamento)
-   pretendido é o seguinte: compare o valor resultante da avaliação de "exp" com 0.
-   se o valor for diferente de 0, retorna-se o resultado da avaliação da expressão expT; 
-   caso contrário, retorna-se o resultado da avaliação da expressão expE. 
-   @dica: estude a semântica do "SIf" na LI2 e saiba explicar a diferença -}    
+
     EIf exp expT expE -> if(i (eval context exp) /= 0)
       then eval context expT
       else eval context expE
-{- TODO: abaixo, troque "undefined" por chamadas das funcoes definidas no inicio do arquivo
-    aplicadas ao argumento "funDef"  @dica: não altere o resto, mas saiba explicar o funcionamento -}
+
     ECall id lexp   -> eval (paramBindings ++ contextFunctions) (getExp funDef)
                           where (ValorFun funDef) = lookup context id
                                 parameters =  getParams funDef
@@ -67,14 +53,6 @@ eval context x = case x of
                                                           
     
 
--- *** @dica: nao altere o todo o codigo abaixo a partir daqui
-
-{-
-data Valor = ValorInt Integer |
-             ValorStr String
-i (ValorInt vi) = vi             
-s (ValorStr vs) = vs
--}
 
 data Valor = ValorInt {
                i :: Integer         
