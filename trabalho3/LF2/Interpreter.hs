@@ -16,17 +16,17 @@ getExp (Fun _ _ _ exp) = exp
 executeP :: Program -> Valor
 
 -- agora executeP vai iniciar um cache []
-executeP (Prog fs) =  eval (updatecF [] fs, []) (expMain fs)
+executeP (Prog fs) =  fst (eval [] (updatecF [] fs) (expMain fs))
     where expMain (f:xs) 
               | (getName f == (Ident "main")) =  getExp f
               | otherwise = expMain xs                                            
           
    
-eval :: FCContext -> RContext -> Exp -> (Valor, FCContex)
+eval :: FCContext -> RContext -> Exp -> (Valor, FCContext)
 eval fcc rc x = case x of
     ECon exp0 exp  -> let (v1, fcc1) = eval fcc rc exp0
                           (v2, fcc2) = eval fcc1 rc exp
-                      in (ValorInt (s v1 ++ s v2), fcc2)
+                      in (ValorStr (s v1 ++ s v2), fcc2)
 
     EAdd exp0 exp  -> let (v1, fcc1) = eval fcc rc exp0
                           (v2, fcc2) = eval fcc1 rc exp
@@ -66,58 +66,51 @@ eval fcc rc x = case x of
                             then eval fcc1 rc expT
                             else eval fcc1 rc expE
 
-    ECall id lexp   -> 
+    ECall id lexp -> 
         let 
-            -- funcao auxiliar para avaliar lista de argumento passado no cache
-            evalArgs :: FCContex -> RContext -> [Exp] -> ([Valor], FCContex)
+            -- Função auxiliar
+            evalArgs :: FCContext -> RContext -> [Exp] -> ([Valor], FCContext)
             evalArgs currentFcc _ [] = ([], currentFcc)
-            evalArgs currentFcc context (e:es) =
-                let (v, fccNext) = eval currentFcc context e 
-                    (vs, fccFinal) = evalArgs fccNext context es 
+            evalArgs currentFcc ctx (e:es) =
+                let (v, fccNext) = eval currentFcc ctx e
+                    (vs, fccFinal) = evalArgs fccNext ctx es
                 in (v:vs, fccFinal)
 
-            -- avalia argumentos usando cache atual
-            (evaluatedArgs, fccAfterArgs) = evalArgs fcc rc lexp 
-
-            -- cria a key
+            -- 1. Avalia argumentos
+            (evaluatedArgs, fccAfterArgs) = evalArgs fcc rc lexp
+            
+            -- 2. Cria chave
             cacheKey = FCEA id evaluatedArgs
         in
-          -- verifica o cache apos avaliar os argumentos
-            case lookupShallowFC fccAfterArgs cacheKey of 
-              -- retorna valor e o cache atual
+            -- 3. Verifica Cache
+            case lookupShallowFC fccAfterArgs cacheKey of
+                -- Caso A: Achou
                 OK v -> (v, fccAfterArgs)
-
-              -- cache miss
-                Erro _ ->
+                
+                -- Caso B: Não achou (Erro no cache)
+                Erro _ -> 
                     let 
-                        (ValorFun funDef) = lookup rc id 
-                        params = getParams funDef 
-
-                        -- cria RContext apenas para a execucao da funcao
-                        paramBindings = zip params evaluatedArgs
-                        contextFunctions = filter (\(_,v) -> case v of ValorFun _ -> True; _ -> False) rc 
-
-                        -- novo novo RContext
+                        (ValorFun funDef) = lookup rc id
+                        params = getParams funDef
                         
-
-      
-      
-      
-      
-      
-      
-      
-      eval (paramBindings ++ contextFunctions) (getExp funDef)
-                          where (ValorFun funDef) = lookup context id
-                                parameters =  getParams funDef
-                                paramBindings = zip parameters (map (eval context) lexp)
-                                contextFunctions = filter (\(i,v) -> case v of 
-                                                                         ValorFun _ -> True 
-                                                                         _ -> False
-                                                           ) 
-                                                          context
-                                                          
-    
+                        paramBindings = zip params evaluatedArgs
+                        
+                        contextFunctions = filter (\(_,v) -> case v of 
+                                                                ValorFun _ -> True 
+                                                                _ -> False
+                                                  ) rc
+                        
+                        -- O novo contexto
+                        funcBodyRc = paramBindings ++ contextFunctions
+                        
+                        -- Executa
+                        (resultVal, fccAfterBody) = eval fccAfterArgs funcBodyRc (getExp funDef)
+                        
+                        -- Atualiza
+                        finalFcc = (cacheKey, resultVal) : fccAfterBody
+                    in
+                        (resultVal, finalFcc)
+                      
 
 
 data Valor = ValorInt {
@@ -133,7 +126,8 @@ data Valor = ValorInt {
              } 
             | ValorBool {
                b :: Bool
-             } deriving (Eq, Show) -- para FunCallEA funcione com Eq (lookup)
+             } deriving Eq -- para FunCallEA funcione com Eq (lookup)
+
 
 instance Show Valor where
   show (ValorBool b) = show b
@@ -148,13 +142,13 @@ type RContext = [(Ident,Valor)]
 data FunCallEA = FCEA Ident [Valor] deriving (Eq, Show)
 
 -- cache de memoizacao
-type FCContex = [(FunCallEA, Valor)]
+type FCContext = [(FunCallEA, Valor)]
 
 -- maybe para buscar no cache
 data R a = OK a | Erro String deriving (Eq, Ord, Show, Read)
 
 -- buscar no cache
-lookupShallowFC :: FCContex -> FunCallEA -> R Valor
+lookupShallowFC :: FCContext -> FunCallEA -> R Valor
 lookupShallowFC [] s = Erro "Not in cache"
 lookupShallowFC ((i,v):cs) s 
    | i == s = OK v  -- por causa desse == que FunCallEA precisa ter deriving
