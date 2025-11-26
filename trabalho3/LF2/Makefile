@@ -3,6 +3,7 @@
 # Makefile for building the parser and test program.
 
 GHC        = ghc
+GHC_OPTS   = -package array
 HAPPY      = happy
 HAPPY_OPTS = --array --info --ghc --coerce
 ALEX       = alex
@@ -14,7 +15,7 @@ ALEX_OPTS  = --ghc
 
 # Default goal.
 
-all : TestLF
+all : TestLF interpretador
 
 # Rules for building the parser.
 
@@ -30,10 +31,13 @@ AbsLF.hs LexLF.x ParLF.y PrintLF.hs TestLF.hs : LF2.cf
 TestLF : AbsLF.hs LexLF.hs ParLF.hs PrintLF.hs TestLF.hs
 	${GHC} ${GHC_OPTS} $@
 
+interpretador : Interpret.hs AbsLF.hs LexLF.hs ParLF.hs Typechecer.hs Optimizer.hs Interpreter.hs
+	${GHC} ${GHC_OPTS} -o interpretador Interpret.hs
+
 # Rules for cleaning generated files.
 
 clean :
-	-rm -f *.hi *.o *.log *.aux *.dvi
+	-rm -f *.hi *.o *.log *.aux *.dvi interpretador TestLF
 
 distclean : clean
 	-rm -f AbsLF.hs AbsLF.hs.bak ComposOp.hs ComposOp.hs.bak DocLF.txt DocLF.txt.bak ErrM.hs ErrM.hs.bak LayoutLF.hs LayoutLF.hs.bak LexLF.x LexLF.x.bak ParLF.y ParLF.y.bak PrintLF.hs PrintLF.hs.bak SkelLF.hs SkelLF.hs.bak TestLF.hs TestLF.hs.bak XMLLF.hs XMLLF.hs.bak ASTLF.agda ASTLF.agda.bak ParserLF.agda ParserLF.agda.bak IOLib.agda IOLib.agda.bak Main.agda Main.agda.bak LF2.dtd LF2.dtd.bak TestLF LexLF.hs ParLF.hs ParLF.info ParDataLF.hs Makefile

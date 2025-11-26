@@ -85,10 +85,10 @@ eval fcc rc x = case x of
             -- 3. Verifica Cache
             case lookupShallowFC fccAfterArgs cacheKey of
                 -- Caso A: Achou
-                OK v -> (v, fccAfterArgs)
+                Found v -> (v, fccAfterArgs)
                 
                 -- Caso B: Não achou (Erro no cache)
-                Erro _ -> 
+                NotFound _ -> 
                     let 
                         (ValorFun funDef) = lookup rc id
                         params = getParams funDef
@@ -145,13 +145,13 @@ data FunCallEA = FCEA Ident [Valor] deriving (Eq, Show)
 type FCContext = [(FunCallEA, Valor)]
 
 -- maybe para buscar no cache
-data R a = OK a | Erro String deriving (Eq, Ord, Show, Read)
+data CacheResult a = Found a | NotFound String deriving (Eq, Ord, Show, Read)
 
 -- buscar no cache
-lookupShallowFC :: FCContext -> FunCallEA -> R Valor
-lookupShallowFC [] s = Erro "Not in cache"
+lookupShallowFC :: FCContext -> FunCallEA -> CacheResult Valor
+lookupShallowFC [] s = NotFound "Not in cache"
 lookupShallowFC ((i,v):cs) s 
-   | i == s = OK v  -- por causa desse == que FunCallEA precisa ter deriving
+   | i == s = Found v  -- por causa desse == que FunCallEA precisa ter deriving
    | otherwise = lookupShallowFC cs s
 
 lookup :: RContext -> Ident -> Valor
