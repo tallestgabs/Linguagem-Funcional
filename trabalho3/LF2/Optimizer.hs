@@ -10,10 +10,10 @@ optimizeP = everywhere (mkT optimizeE)
 optimizeE :: Exp -> Exp
 optimizeE exp  = case exp of
 
-                      EAdd EInt(n1) EInt(n2) -> EInt(n1 + n2) 
-                      ESub EInt(n1) EInt(n2) -> EInt(n1 - n2)
-                      EMul EInt(n1) EInt(n2) -> EInt(n1 * n2)                       
-                      EDiv EInt(n1) EInt(n2) 
+                      EAdd (EInt n1) (EInt n2) -> EInt(n1 + n2) 
+                      ESub (EInt n1) (EInt n2) -> EInt(n1 - n2)
+                      EMul (EInt n1) (EInt n2) -> EInt(n1 * n2)                       
+                      EDiv (EInt n1) (EInt n2) 
                         | n2 /= 0 -> EInt(n1 `div` n2)
 
                       EOr (ETrue) _          -> ETrue 
@@ -27,8 +27,9 @@ optimizeE exp  = case exp of
                       ENot (ETrue)           -> EFalse 
                       ENot (EFalse)          -> ETrue
 
-                      ECon EStr(s1) EStr(s2) -> EStr(s1 ++ s2)
-                      EIf EInt(n) expT expE
+                      ECon (EStr s1) (EStr s2) -> EStr(s1 ++ s2)
+
+                      EIf (EInt n) expT expE
                         | n /= 0             -> expT                          
                         | otherwise          -> expE
                       
