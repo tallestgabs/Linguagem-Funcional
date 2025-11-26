@@ -10,6 +10,7 @@ module AbsLF where
 import Prelude (Integer, String)
 import qualified Prelude as C (Eq, Ord, Show, Read)
 import qualified Data.String
+import Data.Data
 
 data Program = Prog [Function]
   deriving (C.Eq, C.Ord, C.Show, C.Read, Data, Typeable)

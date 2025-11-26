@@ -9,26 +9,6 @@ optimizeP = everywhere (mkT optimizeE)
        
 optimizeE :: Exp -> Exp
 optimizeE exp  = case exp of
-
-                      EAdd (EInt n1) (EInt n2) -> EInt(n1 + n2) 
-                      ESub (EInt n1) (EInt n2) -> EInt(n1 - n2)
-                      EMul (EInt n1) (EInt n2) -> EInt(n1 * n2)                       
-                      EDiv (EInt n1) (EInt n2) 
-                        | n2 /= 0 -> EInt(n1 `div` n2)
-
-                      EOr (ETrue) _          -> ETrue 
-                      EOr _ (ETrue)          -> ETrue 
-                      EOr (EFalse) (EFalse)  -> EFalse
-
-                      EAnd (ETrue) (ETrue)   -> ETrue 
-                      EAnd (EFalse) _        -> EFalse
-                      EAnd _ (EFalse)        -> EFalse
-
-                      ENot (ETrue)           -> EFalse 
-                      ENot (EFalse)          -> ETrue
-
-                      ECon (EStr s1) (EStr s2) -> EStr(s1 ++ s2)
-
                       EIf (EInt n) expT expE
                         | n /= 0             -> expT                          
                         | otherwise          -> expE
@@ -36,4 +16,24 @@ optimizeE exp  = case exp of
                       EIf (ETrue) expT _     -> expT
                       EIf (EFalse) _ expE    -> expE
 
-                      _ -> exp 
+                      _ -> if(isGround exp)
+                              then wrapValueExpression  (fst (eval [] [] exp))
+                              else exp
+
+                        
+isGround:: Exp -> Bool 
+isGround expr = everything (&&) (extQ (const True) check) expr
+  where
+    check :: Exp -> Bool 
+    check (EVar _)    = False
+    check (ECall _ _) = False 
+    check _           = True
+
+
+
+wrapValueExpression :: Valor -> Exp 
+wrapValueExpression (ValorInt i)      = EInt i
+wrapValueExpression (ValorStr s)      = EStr s 
+wrapValueExpression (ValorBool True)  = ETrue
+wrapValueExpression (ValorBool False) = EFalse
+                       

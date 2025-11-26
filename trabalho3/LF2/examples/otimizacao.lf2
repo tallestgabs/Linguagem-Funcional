@@ -1,0 +1,26 @@
+// A main é obrigatória para a execução, mas o otimizador roda em tudo
+int main () {
+  0
+}
+
+// Teste 1: Matemática (Deve virar apenas 14 na árvore otimizada)
+int testeMatematica () {
+  2 + 3 * 4
+}
+
+// Teste 2: Booleanos (Deve virar false)
+bool testeLogica () {
+  true && false
+}
+
+// Teste 3: IF com Dead Code (Deve sobrar apenas o 200)
+int testeIf () {
+  if (0) then 100 else 200
+}
+
+// Teste 4: Aninhado (O otimizador deve resolver a conta e o IF, sobrando 20)
+int testeComplexo () {
+  if (2 - 2) 
+    then 500 
+    else 10 + 10
+}
