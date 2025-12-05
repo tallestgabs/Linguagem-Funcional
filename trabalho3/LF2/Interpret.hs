@@ -19,9 +19,8 @@ calc sourceCode =
        Ok ast -> let typeCheckResult = typeCheckP ast in 
                      if (any isError typeCheckResult)  
                         then (show (filter isError typeCheckResult))  
-                        else let (optProgram, logs) = optimizeP ast in 
+                        else let optProgram = optimizeP ast in 
                                    ">>>>>>> Programa original:<<<<<<< \n"  ++ (printTree ast)++ "\n" ++
-                                   ">>>>>>> Logs do Otimizador (Monad Writer):<<<<<<< \n" ++ (unlines logs) ++ "\n" ++
                                    ">>>>>>> Programa otimizado:<<<<<<< \n" ++ (printTree optProgram) ++ "\n" ++ 
                                    ">>>>>>> Resultado da execucao:<<<<<<< \n" ++ (show (executeP optProgram))
        Bad errorMessage -> errorMessage
