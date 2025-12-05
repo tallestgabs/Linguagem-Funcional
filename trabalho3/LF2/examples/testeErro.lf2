@@ -1,0 +1,8 @@
+int soma(int a, int b) {
+  a + b
+}
+
+int main() {
+  // Erro: O segundo argumento é bool, mas esperava int
+  soma(10, false)
+}
