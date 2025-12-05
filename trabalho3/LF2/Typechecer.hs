@@ -3,17 +3,20 @@ module Typechecer where
 import AbsLF
 import Prelude hiding (lookup)
 import PrintLF
-import Control.Monad (ap, liftM, zipWithM_)
+import Control.Monad (zipWithM_)
 
 data R a = OK a | Erro String                                   
          deriving (Eq, Ord, Show, Read)
 
 instance Functor R where 
-    fmap = liftM 
+    fmap f (OK x)   = OK(f x) 
+    fmap _ (Erro s) = Erro s
 
 instance Applicative R where
     pure  = OK 
-    (<*>) = ap 
+    (OK f)   <*> (OK x)   = OK (f x) 
+    (Erro s) <*> _        = Erro s 
+    _        <*> (Erro s) = Erro s
 
 instance Monad R where 
     (OK x) >>= f      = f x
